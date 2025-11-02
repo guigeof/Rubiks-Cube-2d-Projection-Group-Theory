@@ -250,6 +250,11 @@ const App: React.FC = () => {
   const [crossView, setCrossView] = useState<'U' | 'F'>('U');
   const [keymapPreset, setKeymapPreset] = useState<KeymapPreset>('user');
   const [animatedFace, setAnimatedFace] = useState<{ face: FaceName, clockwise: boolean } | null>(null);
+  const [showHighlightZones, setShowHighlightZones] = useState(false);
+  const [showEdgeSketches, setShowEdgeSketches] = useState(false);
+  const [showNodeCoords, setShowNodeCoords] = useState(false);
+  const [showCornerSketches, setShowCornerSketches] = useState(true);
+  const [showCircleColors, setShowCircleColors] = useState(true);
   const animationTimeoutRef = useRef<number | null>(null);
 
   const highlightedIds = useMemo(() => {
@@ -468,11 +473,28 @@ const App: React.FC = () => {
                     </div>
                 </div>
                  <div className="flex flex-col gap-2">
-                    <h2 className="text-xl font-bold text-center text-gray-300">
-                        2D Graph Projection
-                    </h2>
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <h2 className="text-xl font-bold text-gray-300">
+                            2D Graph Projection
+                        </h2>
+                        <button onClick={() => setShowHighlightZones(s => !s)} className="px-2 py-0.5 text-xs bg-gray-700/80 rounded-md hover:bg-gray-600/80">
+                            {showHighlightZones ? 'Hide' : 'Show'} Zones
+                        </button>
+                         <button onClick={() => setShowEdgeSketches(s => !s)} className="px-2 py-0.5 text-xs bg-gray-700/80 rounded-md hover:bg-gray-600/80">
+                            {showEdgeSketches ? 'Hide' : 'Show'} Edges
+                        </button>
+                        <button onClick={() => setShowCornerSketches(s => !s)} className="px-2 py-0.5 text-xs bg-gray-700/80 rounded-md hover:bg-gray-600/80">
+                            {showCornerSketches ? 'Hide' : 'Show'} Pieces
+                        </button>
+                        <button onClick={() => setShowCircleColors(s => !s)} className="px-2 py-0.5 text-xs bg-gray-700/80 rounded-md hover:bg-gray-600/80">
+                            {showCircleColors ? 'Hide' : 'Show'} Colors
+                        </button>
+                        <button onClick={() => setShowNodeCoords(s => !s)} className="px-2 py-0.5 text-xs bg-gray-700/80 rounded-md hover:bg-gray-600/80">
+                            {showNodeCoords ? 'Hide' : 'Show'} Coords
+                        </button>
+                    </div>
                     <div className="aspect-square bg-gray-800/50 rounded-lg overflow-hidden border border-gray-700/50">
-                        <Graph2D cubeState={cubeState} highlightedIds={highlightedIds} onStickerClick={handleStickerClick} showBld={showBld} onMove={handleMove} playClickSound={playClickSound} />
+                        <Graph2D cubeState={cubeState} highlightedIds={highlightedIds} onStickerClick={handleStickerClick} showBld={showBld} onMove={handleMove} playClickSound={playClickSound} showHighlightZones={showHighlightZones} showEdgeSketches={showEdgeSketches} showNodeCoords={showNodeCoords} showCornerSketches={showCornerSketches} showCircleColors={showCircleColors} />
                     </div>
                 </div>
             </div>

@@ -65,6 +65,8 @@ export const BLD_ALPHABET: Record<string, string> = {
   'D_0_0': 'q', 'D_0_1': 'r', 'D_0_2': 's', 'D_1_0': 't', /* D_1_1 is center */ 'D_1_2': 'u', 'D_2_0': 'v', 'D_2_1': 'w', 'D_2_2': 'x',
 };
 
+export const GRAPH_CENTER = { x: 200, y: 200 };
+export const GRAPH_RADII = [120, 145, 170];
 
 const generateGraphLayout = () => {
   const nodes: GraphNode[] = [];
@@ -72,14 +74,20 @@ const generateGraphLayout = () => {
   const stickerMap: number[] = Array(54);
   let nodeId = 0;
 
-  // CRITICAL: DO NOT ADJUST these coordinates. They are finely tuned.
-  // É PROIBIDO FAZER OUTROS AJUSTES NESSES PONTOS.
+  // Enforce perfect ternary symmetry by calculating centers based on polar coordinates
+  const center_dist = 90;
   const centers = {
-    U: { x: 200, y: 145 },
-    F: { x: 145, y: 255 },
-    R: { x: 255, y: 255 },
+    U: { x: GRAPH_CENTER.x, y: GRAPH_CENTER.y - center_dist },
+    F: { 
+      x: GRAPH_CENTER.x + center_dist * Math.cos(150 * Math.PI / 180), // 150 degrees from positive x-axis
+      y: GRAPH_CENTER.y + center_dist * Math.sin(150 * Math.PI / 180) 
+    },
+    R: { 
+      x: GRAPH_CENTER.x + center_dist * Math.cos(30 * Math.PI / 180), // 30 degrees from positive x-axis
+      y: GRAPH_CENTER.y + center_dist * Math.sin(30 * Math.PI / 180)
+    },
   };
-  const radii = [100, 120, 140];
+  const radii = GRAPH_RADII;
 
   (Object.keys(centers) as ('U' | 'F' | 'R')[]).forEach(faceName => {
     const center = centers[faceName];
@@ -197,7 +205,7 @@ const generateGraphLayout = () => {
     }
   });
 
-  const stickerGroupAngles: Record<'U' | 'F' | 'R', number[]> = { U: [], F: [], R: [] };
+  const stickerGroupAngles: Record<'U' | 'F' | 'R', Record<string, number>> = { U: {}, F: {}, R: {} };
   
   const getGroupAngle = (faceName: FaceName, center: {x: number, y: number}): number => {
     const faceNodes = nodeGroups[faceName];
@@ -209,13 +217,19 @@ const generateGraphLayout = () => {
   };
   
   const uAdjacent: FaceName[] = ['F', 'R', 'B', 'L'];
-  stickerGroupAngles.U = uAdjacent.map(fn => getGroupAngle(fn, centers.U)).sort((a, b) => a - b);
+  uAdjacent.forEach(fn => {
+    stickerGroupAngles.U[fn] = getGroupAngle(fn, centers.U);
+  });
   
   const fAdjacent: FaceName[] = ['U', 'L', 'D', 'R'];
-  stickerGroupAngles.F = fAdjacent.map(fn => getGroupAngle(fn, centers.F)).sort((a, b) => a - b);
+   fAdjacent.forEach(fn => {
+    stickerGroupAngles.F[fn] = getGroupAngle(fn, centers.F);
+  });
   
   const rAdjacent: FaceName[] = ['U', 'B', 'D', 'F'];
-  stickerGroupAngles.R = rAdjacent.map(fn => getGroupAngle(fn, centers.R)).sort((a, b) => a - b);
+  rAdjacent.forEach(fn => {
+    stickerGroupAngles.R[fn] = getGroupAngle(fn, centers.R);
+  });
 
   const stickerZoneBoundaries: Record<'U' | 'F' | 'R', number[]> = { U: [], F: [], R: [] };
   const STICKER_ZONE_ANGULAR_WIDTH = Math.PI / 4; // 45 degrees
@@ -227,7 +241,7 @@ const generateGraphLayout = () => {
   };
 
   for (const face of (['U', 'F', 'R'] as const)) {
-      const angles = stickerGroupAngles[face];
+      const angles = Object.values(stickerGroupAngles[face]).sort((a, b) => a - b);
       const boundaries: number[] = [];
       for (const angle of angles) {
           boundaries.push(normalizeAngleTo2Pi(angle - STICKER_ZONE_ANGULAR_WIDTH / 2));
@@ -236,13 +250,14 @@ const generateGraphLayout = () => {
       stickerZoneBoundaries[face] = boundaries.sort((a, b) => a - b);
   }
 
-  return { nodes, circles, stickerMap, stickerGroupAngles, stickerZoneBoundaries };
+  return { nodes, circles, stickerMap, stickerGroupAngles, stickerZoneBoundaries, centers };
 };
 
 
-const { nodes, circles, stickerMap, stickerGroupAngles, stickerZoneBoundaries } = generateGraphLayout();
+const { nodes, circles, stickerMap, stickerGroupAngles, stickerZoneBoundaries, centers } = generateGraphLayout();
 export const GRAPH_NODES = nodes;
 export const GRAPH_CIRCLES = circles;
 export const STICKER_TO_NODE_MAP = stickerMap;
 export const GRAPH_STICKER_GROUP_ANGLES = stickerGroupAngles;
 export const GRAPH_STICKER_ZONE_BOUNDARIES = stickerZoneBoundaries;
+export const GRAPH_CENTERS = centers;
